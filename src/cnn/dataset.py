@@ -36,6 +36,6 @@ class ClassificationDataset:
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
 
         return {
-            "image": torch.tensor(image, dtype=torch.float),
+            "images": torch.tensor(image, dtype=torch.float),
             "targets": torch.tensor(targets, dtype=torch.long),
         }
