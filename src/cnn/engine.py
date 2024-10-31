@@ -3,7 +3,7 @@ import torch
 
 import config
 
-def train_fn(data_loader, model, optimizer):
+def train_fn(model, data_loader, optimizer):
     model.train()
     fin_loss = 0
     tk0 = tqdm(data_loader, total=len(data_loader))
@@ -17,7 +17,7 @@ def train_fn(data_loader, model, optimizer):
 
         optimizer.zero_grad()
 
-        _, loss = model(images=data['images'], targets=targets, target_mask=targets_mask)
+        _, loss = model(images=data['images'], labels=targets, labels_mask=targets_mask)
 
         loss.backward()
         optimizer.step()
@@ -25,7 +25,7 @@ def train_fn(data_loader, model, optimizer):
     return fin_loss / len(data_loader)
 
 
-def eval_fn(data_loader, model):
+def eval_fn(model, data_loader):
     model.eval()
     fin_loss = 0
     fin_preds = []

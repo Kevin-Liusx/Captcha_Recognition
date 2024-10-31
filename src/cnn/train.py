@@ -9,6 +9,8 @@ from sklearn import preprocessing
 
 import config 
 import dataset
+import engine
+from model import CNN
 
 def run_training():
     # Get the image files, excluding the duplicate images
@@ -60,51 +62,35 @@ def run_training():
         test_dataset, batch_size=config.BATCH_SIZE, num_workers=config.NUM_WORKERS, shuffle=False
     )
     
-    # model = config.MODEL
-    # model.to(config.DEVICE)
+    model = CNN(num_classes=len(lbl_enc.classes_))
+    model.to(config.DEVICE)
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    #     optimizer, 
-    #     mode="min", 
-    #     patience=5, 
-    #     factor=0.3, 
-    #     verbose=True
-    # )
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, 
+        patience=5, 
+        factor=0.3, 
+        verbose=True
+    )
 
-    # for epoch in range(config.EPOCHS):
-    #     model.train()
-    #     for data in train_loader:
-    #         images = data["image"]
-    #         targets = data["targets"]
+    for epoch in range(config.EPOCHS):
+        train_loss = engine.train_fn(model, train_loader, optimizer)
+        valid_preds, valid_loss = engine.eval_fn(model, test_loader)
+        print(f"Epoch={epoch}, Train Loss={train_loss}, Valid Loss={valid_loss}")
 
-    #         images = images.to(config.DEVICE, dtype=torch.float)
-    #         targets = targets.to(config.DEVICE, dtype=torch.long)
+if __name__ == "__main__":
+    run_training()
 
-    #         optimizer.zero_grad()
-    #         outputs = model(images)
-    #         loss = loss_fn(outputs, targets)
-    #         loss.backward()
-    #         optimizer.step()
+# image_files = [f for f in glob.glob(os.path.join(config.TRAIN_DATA_DIR, "*.png")) if "(1)" not in os.path.basename(f)]
+# targets_orig = [x.split("/")[-1][:-6] for x in image_files]
 
-    #     model.eval()
-    #     fin_targets = []
-    #     fin_outputs = []
-    #     with torch.no_grad():
-    #         for data in test_loader:
-    #             images = data
+# targets = [[c for c in x] for x in targets_orig]
+# targets_flat = [c for clist in targets for c in clist]
 
+# lbl_enc = preprocessing.LabelEncoder()
+# lbl_enc.fit(targets_flat)
+# targets_enc = [lbl_enc.transform(x) + 1 for x in targets]
+# max_length = max(len(seq) for seq in targets_enc)
+# targets_enc_padded = np.array([np.pad(seq, (0, max_length - len(seq)), constant_values=-1) for seq in targets_enc])
 
-image_files = [f for f in glob.glob(os.path.join(config.TRAIN_DATA_DIR, "*.png")) if "(1)" not in os.path.basename(f)]
-targets_orig = [x.split("/")[-1][:-6] for x in image_files]
-
-targets = [[c for c in x] for x in targets_orig]
-targets_flat = [c for clist in targets for c in clist]
-
-lbl_enc = preprocessing.LabelEncoder()
-lbl_enc.fit(targets_flat)
-targets_enc = [lbl_enc.transform(x) + 1 for x in targets]
-max_length = max(len(seq) for seq in targets_enc)
-targets_enc_padded = np.array([np.pad(seq, (0, max_length - len(seq)), constant_values=-1) for seq in targets_enc])
-
-print(len(lbl_enc.classes_))
+# print(len(lbl_enc.classes_))
