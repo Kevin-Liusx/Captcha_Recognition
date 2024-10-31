@@ -107,4 +107,4 @@ targets_enc = [lbl_enc.transform(x) + 1 for x in targets]
 max_length = max(len(seq) for seq in targets_enc)
 targets_enc_padded = np.array([np.pad(seq, (0, max_length - len(seq)), constant_values=-1) for seq in targets_enc])
 
-print(image_files[0])
+print(len(lbl_enc.classes_))
